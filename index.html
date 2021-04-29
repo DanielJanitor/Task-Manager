@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!--FONT AWSOME-->
+    <link rel="stylesheet" href="css/all.min.css">
+    <link rel="stylesheet" href="css/fontawesome.min.css">
+
+    <!--GOOGLE FONTS-->
+    <link rel="preconnect" href="https://fonts.gstatic.com">
+    <link href="https://fonts.googleapis.com/css2?family=Contrail+One&display=swap" rel="stylesheet">
+
+    <!--BOOTSTRAP 5-->
+    <link rel="stylesheet" href="css/bootstrap.css">
+    <link rel="stylesheet" href="https://bootswatch.com/4/yeti/bootstrap.min.css">
+
+    <!--My Style-->
+    <style>
+        body {
+            height: auto;
+        }
+        textarea {
+            resize: none;
+        }
+        .row-object {
+            padding-left: 1rem;
+            padding-bottom: 1rem;
+            margin-bottom: 1rem;
+            border-bottom: 1px solid gainsboro;
+        }
+        .logo {
+            color: #fff;
+            font-family: 'Contrail One', cursive;
+            margin-top: 0.2rem;
+            padding-top: 0.5rem;
+        }
+    </style>
+    <title>Task Manager Application</title>
+
+</head>
+<body>
+
+    <div class="row m-0 bg-dark">
+        <div class="col-md-3 d-flex justify-content-center align-items-center">
+            <div>
+                <h1 class="logo ">JD</h1>
+            </div>
+        </div>
+        <div class="col-md-6 p-2">
+            <div class="nav d-flex justify-content-center">
+                <h2 class="text-light align-self-center">Simple Task Manager</h2>
+            </div>
+        </div>
+        <div class="col-md-3 d-flex justify-content-center align-items-center">
+            <h5 class="text-light date">28.04.2021</h5>
+        </div>
+    </div>
+    <div class="container">
+        <div class="row my-5">
+            <div class="col-md-3">
+                <h1 class="text-center p-2">New Task</h1>
+                <div class="card">
+                    <div class="card-body">
+                        <form id="form-task">
+                            <div class="form-group">
+                                <input type="text" id="title" class="form-control" maxlength="50" autocomplete="off"
+                                    placeholder="Title" required>
+                            </div>
+                            <div class="form-group">
+                                <textarea type="text" id="description" class="form-control textareaText" cols="30"
+                                    rows="10" maxlength="100" autocomplete="off" placeholder="Description"
+                                    required></textarea>
+                                <p class="ptext">Characters Remaining: <span class="numberCh">100</span></p>
+                            </div>
+                            <button type="submit" class="btn btn-info btn-block">Save</button>
+                            <div class="text-center mt-3">Number of Active Tasks: <span class="number"></span></div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-9 mt-3">
+                <div class="row row-object">
+                    <div class="col-sm-3 text-left">
+                        <p class="font-weight-bold">Title</p>
+                    </div>
+                    <div class="col-sm-6 text-left">
+                        <p class="font-weight-bold">Description</p>
+                    </div>
+                    <div class="col-sm-3 text-left">
+                        <p class="font-weight-bold px-4 mx-2">Action</p>
+                    </div>
+                </div>
+                <div id="tasks"></div>
+            </div>
+        </div>
+    </div>
+
+
+    <script>
+        //Date
+        let today = new Date();
+        let dd = today.getDate();
+        let mm = today.getMonth() + 1;
+        let yy = today.getFullYear();
+        let day = `${dd}.${mm}.${yy}`;
+        document.querySelector('.date').innerText = day;
+
+        //Character Counter wiht limit and formating     
+        const area = document.querySelector('.textareaText');
+        const numb = document.querySelector('.numberCh');
+        const maxlength = 100;
+
+        area.addEventListener('input', () => {
+            let remaining = area.value.length;
+            remaining = maxlength - remaining;
+            numb.innerHTML = remaining;
+            console.log(remaining);
+
+            if (remaining <= 50 && remaining > 20) {
+                numb.style.color = "orange";
+            } else if (remaining <= 20) {
+                numb.style.color = "red";
+            } else {
+                numb.style.color = "black";
+            }
+        });
+
+        //EVENT Listener for FORM 
+        document.querySelector('#form-task').addEventListener('submit', saveTask);
+
+        //Function for save new Task ( object ) in array and localStorage  
+        function saveTask(e) {
+
+            let title = document.querySelector('#title').value;
+            let description = document.querySelector('#description').value;
+
+            let task = {
+                title,
+                description
+            };
+
+            //Local Storage handler
+            if (localStorage.getItem('tasks') === null) {
+                let tasks = [];
+                tasks.push(task);
+                localStorage.setItem('tasks', JSON.stringify(tasks))
+            } else {
+                let tasks = JSON.parse(localStorage.getItem('tasks'));
+                tasks.push(task);
+                localStorage.setItem('tasks', JSON.stringify(tasks));
+            };
+
+            //Event Chart number Listener
+            const area = document.querySelector('.textareaText');
+            let numb = document.querySelector('.numberCh');
+            const maxlength = 100;
+
+            area.addEventListener('input', () => {
+                let remaining = area.value.length;
+                remaining = maxlength - remaining;
+                numb.innerHTML = remaining;
+
+                if (remaining <= 50 && remaining > 20) {
+                    numb.style.color = "orange";
+                } else if (remaining <= 20) {
+                    numb.style.color = "red";
+                } else {
+                    numb.style.color = "black";
+                }
+
+            })
+
+            //Call function to get actual overview after add new task
+            getTasks();
+            //Reset chart counter
+            numb.innerHTML = 100;
+            //Resete inputs
+            document.querySelector("#form-task").reset();
+            e.preventDefault();
+        };
+
+        //Function to detele task from UI and localStorage
+        function deleteTask(title) {
+
+            let tasks = JSON.parse(localStorage.getItem('tasks'));
+            tasks.forEach((task, index) => {
+                if (task.title == title) {
+                    tasks.splice(index, 1);
+                }
+            });
+
+            localStorage.setItem('tasks', JSON.stringify(tasks));
+            getTasks();
+
+        };
+
+        //Function to create and display new task + existing tasks
+        function getTasks() {
+
+            let taskView = document.querySelector('#tasks');
+            let tasks = JSON.parse(localStorage.getItem('tasks'));
+            let number = document.querySelector('.number');
+            let count = tasks.length;
+            taskView.innerHTML = '';
+
+            number.innerText = count;
+
+            for (let i = 0; i < tasks.length; i++) {
+                let title = tasks[i].title;
+                let description = tasks[i].description;
+
+                taskView.innerHTML += `
+                <div class="card mb-3">
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-sm-3 text-left">
+                                <p>${title}</p>
+                            </div>
+                            <div class="col-sm-7 text-left">
+                                <p>${description}</p>
+                            </div>
+                            <div class="col-sm-2 text-right">
+                                <a href="#" onclick="deleteTask('${title}')" class="btn btn-danger ml-4">X</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>`;
+            };
+
+        };
+        //Call function to automaticly display all tasks from localStorage to UI
+        document.addEventListener('DOMContentLoaded', getTasks);
+    </script>
+
+</body>
+
+</html>
